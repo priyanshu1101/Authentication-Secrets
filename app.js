@@ -1,4 +1,4 @@
-require('dotenv').config();   //Env from npm (read documentation for more knowledge)
+const md5= require('md5');    //Converts text to hashcode 
 const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
@@ -21,10 +21,7 @@ const userSchema = new mongoose.Schema({
   password: String
 });
 
-const secret="Thisisourlittlesecret.";                                    //Key for encryption (But Now Replaced with .ENV)
-userSchema.plugin(encrypt,{secret:process.env.SECRET,encryptedFields:["password"]});  //Before * because we are passing userSchema (Here only password will be encrypted)
-
-const User = new mongoose.model("User", userSchema); // *
+const User = new mongoose.model("User", userSchema);
 
 
 app.get("/", function(req, res){
@@ -42,7 +39,7 @@ app.get("/register", function(req, res){
 app.post("/register", function(req, res){
   const newUser =  new User({
     email: req.body.username,
-    password: req.body.password
+    password: md5(req.body.password)
   });
   newUser.save(function(err){
     if (err) {
@@ -55,14 +52,14 @@ app.post("/register", function(req, res){
 
 app.post("/login", function(req, res){
   const username = req.body.username;
-  const password = req.body.password;
+  const password = md5(req.body.password);   //Saves password in hash code to the database
 
   User.findOne({email: username}, function(err, foundUser){
     if (err) {
       console.log(err);
     } else {
       if (foundUser) {
-        if (foundUser.password === password) {
+        if (foundUser.password === password) {  //Retieve the hash code from the database and convert the input password to hashcode and compare them
           res.render("secrets");
         }
       }
