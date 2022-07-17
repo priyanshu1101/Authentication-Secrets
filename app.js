@@ -1,3 +1,4 @@
+require('dotenv').config();   //Env from npm (read documentation for more knowledge)
 const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
@@ -12,6 +13,7 @@ app.use(bodyParser.urlencoded({
   extended: true
 }));
 
+
 mongoose.connect("mongodb://localhost:27017/userDB", {useNewUrlParser: true});
 
 const userSchema = new mongoose.Schema({
@@ -19,8 +21,8 @@ const userSchema = new mongoose.Schema({
   password: String
 });
 
-const secret="Thisisourlittlesecret.";                                    //Key for encryption
-userSchema.plugin(encrypt,{secret:secret,encryptedFields:["password"]});  //Before * because we are passing userSchema (Here only password will be encrypted)
+const secret="Thisisourlittlesecret.";                                    //Key for encryption (But Now Replaced with .ENV)
+userSchema.plugin(encrypt,{secret:process.env.SECRET,encryptedFields:["password"]});  //Before * because we are passing userSchema (Here only password will be encrypted)
 
 const User = new mongoose.model("User", userSchema); // *
 
@@ -56,7 +58,6 @@ app.post("/login", function(req, res){
   const password = req.body.password;
 
   User.findOne({email: username}, function(err, foundUser){
-    console.log(foundUser);
     if (err) {
       console.log(err);
     } else {
