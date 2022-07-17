@@ -1,8 +1,8 @@
-//jshint esversion:6
 const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
 const mongoose = require("mongoose");
+const encrypt = require('mongoose-encryption');
 
 const app = express();
 
@@ -14,12 +14,16 @@ app.use(bodyParser.urlencoded({
 
 mongoose.connect("mongodb://localhost:27017/userDB", {useNewUrlParser: true});
 
-const userSchema = ({
+const userSchema = new mongoose.Schema({
   email: String,
   password: String
 });
 
-const User = new mongoose.model("User", userSchema);
+const secret="Thisisourlittlesecret.";                                    //Key for encryption
+userSchema.plugin(encrypt,{secret:secret,encryptedFields:["password"]});  //Before * because we are passing userSchema (Here only password will be encrypted)
+
+const User = new mongoose.model("User", userSchema); // *
+
 
 app.get("/", function(req, res){
   res.render("home");
@@ -52,6 +56,7 @@ app.post("/login", function(req, res){
   const password = req.body.password;
 
   User.findOne({email: username}, function(err, foundUser){
+    console.log(foundUser);
     if (err) {
       console.log(err);
     } else {
